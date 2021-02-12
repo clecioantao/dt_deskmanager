@@ -33,16 +33,18 @@ resp_token = json.loads(token.text)
 chamados_total = 71220
 chamados_pag = 3000
 
-paginas = round((chamados_total / chamados_pag) + 0.5)
+paginas = 3 #round((chamados_total / chamados_pag) + 0.5)
+print(paginas)
 contador = 1
 
 while contador <= paginas:
 
     #################################
-    # LISTA DE CHAMADOS - até 3000
+    # LISTA DE CHAMADOS - paginação de 3000 em 3000
     
     url = "https://api.desk.ms/ChamadosSuporte/lista"
-    payload="{\r\n  \"Pesquisa\":\" \", \r\n  \"Tatual\":\"3000\", \r\n  \"StatusSLA\": \"\"\r\n}"
+    payload="{\r\n  \"Pesquisa\":\"T.I. Sistemas\", \r\n  \"Tatual\":\"chamados_pag\", \r\n  \"StatusSLA\": \"\"\r\n}"
+    #payload="{\r\n  \"Pesquisa\":\"T.I. Sistemas\", \r\n  \"Tatual\":\"6000\", \r\n  \"StatusSLA\": \"\"\r\n}"
     headers = {
       'Authorization': resp_token,
       'Content-Type': 'application/json'
@@ -50,44 +52,26 @@ while contador <= paginas:
     resp = requests.request("POST", url, headers=headers, data=payload)
     resp_data = json.loads(resp.text)
     root = resp_data['root']
-    df1 = pd.DataFrame(root)
     
-    #print(df1.iloc[:,:6])
+    #df = df + str(contador)
     
+    df = pd.DataFrame(root)
+    
+    print(chamados_pag)
+    print(contador)
+   
     # EXPORTA TABELA PARA O BANCO
     
     # CALCULA O CHUNKSIZE MÁXIMO
-    cs = 2097 // len(df1.columns)  # duas barras faz a divisão e tras numero inteiro
+    cs = 2097 // len(df.columns)  # duas barras faz a divisão e tras numero inteiro
     if cs > 1000:
         cs = 1000
     else:
         cs = cs
     # INSERE DADOS TABELA SQL SEVER
-    df1 .to_sql(name='chamados', con=engineorigem, if_exists='append', chunksize=cs)
+    df.to_sql(name='chamados', con=engineorigem, if_exists='append', chunksize=cs)
     
-    #####################################
-    # LISTA DE CHAMADOS - DE 6000 A 9000
+    chamados_pag = chamados_pag + 3000
+    contador =  contador + 1
     
-    url = "https://api.desk.ms/ChamadosSuporte/lista"
-    payload="{\r\n  \"Pesquisa\":\" \", \r\n  \"Tatual\":\"6000\", \r\n  \"StatusSLA\": \"\"\r\n}"
-    headers = {
-      'Authorization': resp_token,
-      'Content-Type': 'application/json'
-    }
-    resp = requests.request("POST", url, headers=headers, data=payload)
-    resp_data = json.loads(resp.text)
-    root = resp_data['root']
-    df2 = pd.DataFrame(root)
-    
-    #print(df1.iloc[:,:6])
-    
-    # EXPORTA TABELA PARA O BANCO
-    
-    # CALCULA O CHUNKSIZE MÁXIMO
-    cs = 2097 // len(df2.columns)  # duas barras faz a divisão e tras numero inteiro
-    if cs > 1000:
-        cs = 1000
-    else:
-        cs = cs
-    # INSERE DADOS TABELA SQL SEVER
-    df2 .to_sql(name='chamados', con=engineorigem, if_exists='append', chunksize=cs)
+ 
