@@ -1,0 +1,16 @@
+curl -X POST -H "Authorization: 66e22b87364fa2946f2ce04dce1b8b59b669ab7f" -d "{\"PublicKey\":\"ef89a6460dbd71f2e37a999514d2543b99509d4f\"}" https://api.desk.ms/Login/autenticar
+
+
+import requests
+
+url = "https://api.desk.ms/Login/autenticar"
+
+payload="{\r\n  \"PublicKey\": \"ef89a6460dbd71f2e37a999514d2543b99509d4f\"\r\n}"
+headers = {
+  'Authorization': '66e22b87364fa2946f2ce04dce1b8b59b669ab7f',
+  'Content-Type': 'application/json'
+}
+
+response = requests.request("POST", url, headers=headers, data=payload)
+
+print(response.json())
