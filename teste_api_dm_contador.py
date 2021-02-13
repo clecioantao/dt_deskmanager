@@ -17,16 +17,17 @@ import sqlalchemy
 engineorigem = sqlalchemy.create_engine('mssql+pyodbc://sa:Proteu690201@192.168.2.20/curso?driver=SQL Server')
 
 # AUTENTICAÇÃO API
-
 url = "https://api.desk.ms/Login/autenticar"
-payload="{\r\n  \"PublicKey\": \"ef89a6460dbd71f2e37a999514d2543b99509d4f\"\r\n}"
+
+pubkey = '\"ef89a6460dbd71f2e37a999514d2543b99509d4f\"'
+payload=" {\r\n  \"PublicKey\" :" + pubkey + "\r\n}"
+
 headers = {
   'Authorization': '66e22b87364fa2946f2ce04dce1b8b59b669ab7f',
   'Content-Type': 'application/json'
 }
 token = requests.request("POST", url, headers=headers, data=payload)
 resp_token = json.loads(token.text)
-
 
 # CRIAR LAÇO 
 
@@ -43,10 +44,13 @@ while contador <= paginas:
     # LISTA DE CHAMADOS - paginação de 3000 em 3000
     
     url = "https://api.desk.ms/ChamadosSuporte/lista"
-    payload="{\r\n  \"Pesquisa\":\"T.I. Sistemas\", \r\n  \"Tatual\":\"chamados_pag\", \r\n  \"StatusSLA\": \"\"\r\n}"
-    #payload2="{\r\n  \"Pesquisa\":\"T.I. Sistemas\", \r\n  \"Tatual\":\"chamados_pag\", \r\n  \"StatusSLA\": \"\"\r\n}"
-
-
+    
+    #payload="{\r\n  \"Pesquisa\" :\"T.I. Sistemas\" , \r\n  \"Tatual\" :\" $chamados_pag \" , \r\n  \"StatusSLA\": \"\" \r\n}"
+    
+    pesquisa = '\"T.I. Sistemas\"'
+    paginador = '\"' +  str(chamados_pag) + '\"'
+    payload="{\r\n  \"Pesquisa\" :"  + pesquisa +  ", \r\n  \"Tatual\" :" + paginador + ", \r\n  \"StatusSLA\": \"\" \r\n}"
+  
     headers = {
       'Authorization': resp_token,
       'Content-Type': 'application/json'
