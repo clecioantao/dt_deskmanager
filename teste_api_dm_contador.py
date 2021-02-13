@@ -33,7 +33,7 @@ resp_token = json.loads(token.text)
 chamados_total = 71220
 chamados_pag = 3000
 
-paginas = 3 #round((chamados_total / chamados_pag) + 0.5)
+paginas = round((chamados_total / chamados_pag) + 0.5)
 print(paginas)
 contador = 1
 
@@ -44,7 +44,9 @@ while contador <= paginas:
     
     url = "https://api.desk.ms/ChamadosSuporte/lista"
     payload="{\r\n  \"Pesquisa\":\"T.I. Sistemas\", \r\n  \"Tatual\":\"chamados_pag\", \r\n  \"StatusSLA\": \"\"\r\n}"
-    #payload="{\r\n  \"Pesquisa\":\"T.I. Sistemas\", \r\n  \"Tatual\":\"6000\", \r\n  \"StatusSLA\": \"\"\r\n}"
+    #payload2="{\r\n  \"Pesquisa\":\"T.I. Sistemas\", \r\n  \"Tatual\":\"chamados_pag\", \r\n  \"StatusSLA\": \"\"\r\n}"
+
+
     headers = {
       'Authorization': resp_token,
       'Content-Type': 'application/json'
@@ -57,6 +59,7 @@ while contador <= paginas:
     
     df = pd.DataFrame(root)
     
+    print(payload)
     print(chamados_pag)
     print(contador)
    
