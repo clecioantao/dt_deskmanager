@@ -3,7 +3,7 @@
 Created on Fri Feb 12 13:31:57 2021
 @author: Clecio Antao
 
-Rotina para leitura de API Desk Manager para popular tabela SQL Server
+Rotina para tratar dados Desk Manager e apresentar qa
 
 """
 
@@ -48,6 +48,7 @@ while contador <= paginas:
     }
     resp = requests.request("POST", url, headers=headers, data=payload)
     resp_data = json.loads(resp.text)
+    print(type(resp_data))
     root = resp_data['root']
     df = pd.DataFrame(root)
     print(payload)
