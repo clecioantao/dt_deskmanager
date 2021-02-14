@@ -45,24 +45,47 @@ print(chamados_aa_analista[['NomeOperador', 'CodChamado']])
 
 #### DISPARA E-MAIL
 
-mystyle = """
-.mystyle {
-    font-size: 15pt; 
-    font-family: Arial;
-    border-collapse: collapse; 
-    border: 1px solid silver;
+sumario_html = """
+<html>
+<head>
+<style>
+p.center {
+  text-align: left;
+  border: 1px solid black;
+  border-collapse: collapse;
+  padding: 10px;
+  vertical-align: baseline;
+}
+p.titulo {
+  font-size: 200%;
+  color: red;
+}
+p.subtitulo {
+  font-size: 150%;
+  color: black;
+}
+p.anuncio {
+  font-size: 120%;
+  color: black;
+  border: 0px;
+}
 
+table, th, td {
+  margin: 2px;
+  padding: 5px;
+  border: 1px solid black;
+  border-collapse: collapse;
+  vertical-align: baseline;
+  text-align: left;  
+  background-color: #fff;
 }
-.mystyle td, th {
-    padding: 15px;
-}
-.mystyle tr:nth-child(even) {
-    background: #E0E0E0;
-}
-.mystyle tr:hover {
-    background: silver;
-    cursor: pointer;
-}
+
+</style>
+</head>
+<body>
+
+</body>
+</html>
 """
 
 # conexão com os servidores do google
@@ -72,7 +95,7 @@ smtp_ssl_port = 465
 username = 'clecio.antao@gmail.com'
 password = 'Proteu690201@'
 from_addr = 'clecio.antao@gmail.com'
-to_addrs = ['clecio.antao@gmail.com']
+to_addrs = ['clecio.antao@gmail.com','clecio.antao@tbforte.com.br']
 
 # a biblioteca email possuí vários templates
 # para diferentes formatos de mensagem
@@ -85,18 +108,19 @@ message['to'] = ', '.join(to_addrs)
 
 # Create the body of the message (a plain-text and an HTML version).
 
-titulo = '<h1>ETL Desk Manager - TI-Sistemas</h1>'
+titulo = '<p class="center titulo">ETL Desk Manager - TI-Sistemas</p>'
 
 now = datetime.now()
-qtd_chamados = '<h2> Registros Carregados: ' + str(len(chamados['CodChamado'].index)) + ' - Data: ' + str(now.day)+'/'+str(now.month)+'/'+str(now.year) + ' - ' + str(now.hour)+':'+str(now.minute)+':'+str(now.second)
+qtd_chamados = '<p class="center subtitulo"> Registros Carregados: ' + str(len(chamados['CodChamado'].index)) + ' - Data: ' + str(now.day)+'/'+str(now.month)+'/'+str(now.year) + ' - ' + str(now.hour)+':'+str(now.minute)+':'+str(now.second) + '</p>'
 
-subtit1 = "<h3> Status: <b>AGUARDANDO ATENDIMENTO</b> - CHAMADOS COM ANALISTAS</h3>"
-dados1 = chamados_aa_analista[['NomeOperador', 'CodChamado', 'DataCriacao', 'Assunto' ]].to_html(index=False, border=1, classes=mystyle) 
+subtit1 = '<p class="center anuncio"> Status: <b>AGUARDANDO ATENDIMENTO</b> - CHAMADOS COM ANALISTAS</h3> </p>'
+dados1 = chamados_aa_analista[['NomeOperador', 'CodChamado', 'DataCriacao', 'Assunto' ]].to_html(index=False, border=1) 
 
 subtit2 = "<h3> Status: <b>AGUARDANDO ATENDIMENTO</b> - CHAMADOS EM FILA</h3>"
-dados2 = chamados_aa_fila[['NomeOperador', 'CodChamado', 'DataCriacao', 'Assunto' ]].to_html(index=False, border=1, classes=mystyle) 
+dados2 = chamados_aa_fila[['NomeOperador', 'CodChamado', 'DataCriacao', 'Assunto' ]].to_html(index=False, border=1) 
 
 # Record the MIME types of both parts - text/plain and text/html.
+sumario = MIMEText(sumario_html, 'html')
 titulo = MIMEText(titulo, 'html')
 registros = MIMEText(qtd_chamados, 'html')
 part1 = MIMEText(subtit1, 'html')
@@ -104,7 +128,7 @@ part2 = MIMEText(dados1, 'html')
 part3 = MIMEText(subtit2, 'html')
 part4 = MIMEText(dados2, 'html')
 
-
+message.attach(sumario)
 message.attach(titulo)
 message.attach(registros)
 message.attach(part1)
