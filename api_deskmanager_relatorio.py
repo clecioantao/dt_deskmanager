@@ -4,16 +4,21 @@ Created on Fri Feb 12 13:31:57 2021
 @author: Clecio Antao
 Rotina para leitura de API Desk Manager para popular tabela SQL Server
 """
-def carrega_dados(filtro):
+def carrega_dados_relatorio():
     
     import pandas as pd
     import requests
     import json
     import sqlalchemy
-    
+            
     # CRIA ENGINE DE ORIGEM - CONECT SQL SERVER
     
     engineorigem = sqlalchemy.create_engine('mssql+pyodbc://sa:Proteu690201@192.168.2.150/deskmanager?driver=SQL Server')
+    
+    chamados = pd.read_sql(sql="SELECT * FROM chamados", con=engineorigem)
+    
+    chamados_total = len(chamados['CodChamado'].index) + 200
+    print('total de chamados: ', chamados_total)
     
     # AUTENTICAÇÃO API
     url = "https://api.desk.ms/Login/autenticar"
@@ -26,21 +31,45 @@ def carrega_dados(filtro):
     token = requests.request("POST", url, headers=headers, data=payload)
     resp_token = json.loads(token.text)
     
+    # VERIFICA QUANTIDADE DE REGISTROS
+    
+    url = "https://api.desk.ms/Relatorios/imprimir"
+    paginador = '\"' +  ' ' + '\"'
+    relatorio = "837"
+    payload="{\r\n  \"Chave\":\"837\", \r\n  \"APartirDe\":\"\", \r\n  \"Total\":\"\"\r\n}"
+    #payload="{\r\n  \"Chave\" :"  + relatorio +  ", \r\n  \"APartirDe\" : \" " + paginador + ", \r\n  \"Total\": \"\" \r\n}"
+    headers = {
+      'Authorization': resp_token,
+      'Content-Type': 'application/json'
+    }
+    resp = requests.request("POST", url, headers=headers, data=payload)
+    resp_data = json.loads(resp.text)
+    root = resp_data['root']
+    df = pd.DataFrame(root)
+    index = df.index
+    total_linhas = len(index)
+    print('Total de linhas: ', total_linhas)
+    
     # CRIAR LAÇO 
     
-    chamados_total = 1000000
-    chamados_pag = 3000
-    paginas = round((chamados_total / chamados_pag) + 0.5)
-    print(paginas)
-    contador = 1
+    print(resp_token)
     
+    #chamados_total =  100000
+    chamados_pag = 0
+    paginas = round((chamados_total / 5000) + 0.5)
+    contador = 1
+      
     while contador <= paginas:
+        print('entrou no laço')
+        print('Paginas: ', paginas)
+        print('Contador: ', contador)
+        print('Linhas: ',chamados_pag)
         #################################
         # LISTA DE CHAMADOS - paginação de 3000 em 3000 
-        url = "https://api.desk.ms/ChamadosSuporte/lista"
-        pesquisa = '\"' + filtro + '\"'
+        url = "https://api.desk.ms/Relatorios/imprimir"
         paginador = '\"' +  str(chamados_pag) + '\"'
-        payload="{\r\n  \"Pesquisa\" :"  + pesquisa +  ", \r\n  \"Tatual\" :" + paginador + ", \r\n  \"StatusSLA\": \"\" \r\n}"
+        relatorio = "837"
+        payload="{\r\n  \"Chave\" :"  + relatorio +  ", \r\n  \"APartirDe\" :" + paginador + ", \r\n  \"Total\": \"\" \r\n}"
         headers = {
           'Authorization': resp_token,
           'Content-Type': 'application/json'
@@ -49,12 +78,10 @@ def carrega_dados(filtro):
         resp_data = json.loads(resp.text)
         root = resp_data['root']
         df = pd.DataFrame(root)
-        print(payload)
-        print(chamados_pag)
-        print(contador)
        
         # EXPORTANDO DADASET PARA TABELA BANCO SQL SERVER
         # CALCULA O CHUNKSIZE MÁXIMO E VERIFICA FINAL LINHAS
+        print('Colunas:', len(df.columns))
         if len(df.columns) > 0:
             cs = 2097 // len(df.columns)  # duas barras faz a divisão e tras numero inteiro
             if cs > 1000:
@@ -64,11 +91,10 @@ def carrega_dados(filtro):
         else:
             break
         # INSERE DADOS TABELA SQL SEVER
-        if chamados_pag == 3000:
-            df.to_sql(name='chamados', con=engineorigem, if_exists='replace', chunksize=cs)
+        if chamados_pag == 0:
+            df.to_sql(name='relatorios', con=engineorigem, if_exists='replace', chunksize=cs)
         else:
-            df.to_sql(name='chamados', con=engineorigem, if_exists='append', chunksize=cs)
+            df.to_sql(name='relatorios', con=engineorigem, if_exists='append', chunksize=cs)
             
-        chamados_pag = chamados_pag + 3000
+        chamados_pag = chamados_pag + 5000
         contador =  contador + 1
-    print(chamados_pag)

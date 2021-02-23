@@ -15,29 +15,26 @@ from email.mime.multipart import MIMEMultipart
 from datetime import datetime
 
 # EXECUTA ROTINA PARA POPULAR TABELA SQL SERVER
-from popula_sql_api_deskmanager import carrega_dados
+from api_deskmanager_relatorio import carrega_dados_relatorio
 
 #from popula_sql_api_deskmanager import carrega_dados
-carrega_dados('Sistemas')
+carrega_dados_relatorio()
 
 # FAZ CONEXÃO COM BANCO
 engineorigem = sqlalchemy.create_engine('mssql+pyodbc://sa:Proteu690201@192.168.2.150/deskmanager?driver=SQL Server')
 
-total_chamados = pd.read_sql(sql="SELECT count(*) FROM chamados", con=engineorigem)
-
 # Todos chamados *
 chamados = pd.read_sql(sql="SELECT * FROM chamados", con=engineorigem)
 # Chamados aguardando atendimento na fila
-chamados_aa_fila = pd.read_sql(sql="select * from chamados where NomeStatus = 'AGUARDANDO ATENDIMENTO' and NomeOperador is null order by 3 ", con=engineorigem)
+chamados_aa_fila = pd.read_sql(sql="select * from relatorios where NomeStatus = 'AGUARDANDO ATENDIMENTO' and NomeOperador is null order by 3 ", con=engineorigem)
 # chamados aguardando atendimento com analista
-chamados_aa_analista = pd.read_sql(sql="select * from chamados where NomeStatus = 'AGUARDANDO ATENDIMENTO' and NomeOperador is not null order by 4,5 ", con=engineorigem)
+chamados_aa_analista = pd.read_sql(sql="select * from relatorios where NomeStatus = 'AGUARDANDO ATENDIMENTO' and NomeOperador is not null order by 4,5 ", con=engineorigem)
 # chamados aguardando ações expirado nivel 1
-chamados_aguardando_expn1 = pd.read_sql(sql="select * from chamados where (NomeStatus = 'AGUARDANDO ATENDIMENTO' OR  NomeStatus = 'ANDAMENTO') and (Sla1Expirado = 'S' and Sla2Expirado = 'N') order by 4,5 ", con=engineorigem)
+chamados_aguardando_expn1 = pd.read_sql(sql="select * from relatorios where (NomeStatus = 'AGUARDANDO ATENDIMENTO' OR  NomeStatus = 'ANDAMENTO') and (Sla1Expirado = 'Expirado' and Sla2Expirado = 'Em Dia') order by 4,5 ", con=engineorigem)
 # chamados aguardando ações em dia
-chamados_aguardando_emdia = pd.read_sql(sql="select * from chamados where (NomeStatus = 'AGUARDANDO ATENDIMENTO' OR  NomeStatus = 'ANDAMENTO') and (Sla1Expirado = 'N' and Sla2Expirado = 'N') order by 4,5 ", con=engineorigem)
+chamados_aguardando_emdia = pd.read_sql(sql="select * from relatorios where (NomeStatus = 'AGUARDANDO ATENDIMENTO' OR  NomeStatus = 'ANDAMENTO') and (Sla1Expirado = 'Em Dia' and Sla2Expirado = 'Em Dia') order by 4,5 ", con=engineorigem)
 # chamados aguardando ações expirados
-chamados_aguardando_expirados = pd.read_sql(sql="select * from chamados where (NomeStatus = 'AGUARDANDO ATENDIMENTO' OR  NomeStatus = 'ANDAMENTO') and (Sla1Expirado = 'S' and Sla2Expirado = 'S') order by 4,5 ", con=engineorigem)
-
+chamados_aguardando_expirados = pd.read_sql(sql="select * from relatorios where (NomeStatus = 'AGUARDANDO ATENDIMENTO' OR  NomeStatus = 'ANDAMENTO') and (Sla1Expirado = 'Expirado' and Sla2Expirado = 'Expirado') order by 4,5 ", con=engineorigem)
 
 chamados.set_index('Chave', inplace=True)
 
@@ -45,6 +42,7 @@ chamados.set_index('Chave', inplace=True)
 print(len(chamados['CodChamado'].index))
 print(chamados.iloc[:, [1,2]][chamados.NomeStatus =='AGUARDANDO ATENDIMENTO'])
 print(chamados_aa_analista[['NomeOperador', 'CodChamado']])
+
 
 #### DISPARA E-MAIL
 
@@ -117,13 +115,13 @@ now = datetime.now()
 qtd_chamados = '<p class="center subtitulo"> Registros Carregados: ' + str(len(chamados['CodChamado'].index)) + ' - Data: ' + str(now.day)+'/'+str(now.month)+'/'+str(now.year) + ' - ' + str(now.hour)+':'+str(now.minute)+':'+str(now.second) + '</p>'
 
 subtit1 = '<p class="center anuncio"><b>AGUARDANDO AÇÃO - EXPIRADOS 1º ATENDIMENTO</h3></b></p>'
-dados1 = chamados_aguardando_expn1[['NomeStatus', 'NomePrioridade', 'Sla1Expirado', 'Sla2Expirado', 'NomeOperador', 'CodChamado', 'DataCriacao', 'HoraCriacao', 'ExpiraEm', 'Assunto' ]].to_html(index=False) 
+dados1 = chamados_aguardando_expn1[['CodChamado', 'Assunto', 'DataCriacao', 'NomeStatus', 'Sla1Expirado', 'Sla2Expirado', 'NomeOperador']].to_html(index=False) 
 
 subtit2 = '<p class="center anuncio"><b>AGUARDANDO AÇÃO - EM DIA</h3></b></p>'
-dados2 = chamados_aguardando_emdia[['NomeStatus', 'NomePrioridade', 'Sla1Expirado', 'Sla2Expirado', 'NomeOperador', 'CodChamado', 'DataCriacao', 'HoraCriacao', 'ExpiraEm', 'Assunto']].to_html(index=False) 
+dados2 = chamados_aguardando_emdia[['CodChamado', 'Assunto', 'DataCriacao', 'NomeStatus', 'Sla1Expirado', 'Sla2Expirado', 'NomeOperador']].to_html(index=False) 
 
 subtit3 = '<p class="center anuncio"><b>AGUARDANDO AÇÃO - EXPIRADOS</h3></b></p>'
-dados3 = chamados_aguardando_expirados[['NomeStatus', 'NomePrioridade', 'Sla1Expirado', 'Sla2Expirado', 'NomeOperador', 'CodChamado', 'DataCriacao', 'HoraCriacao', 'ExpiraEm', 'Assunto']].to_html(index=False) 
+dados3 = chamados_aguardando_expirados[['CodChamado', 'Assunto', 'DataCriacao', 'NomeStatus', 'Sla1Expirado', 'Sla2Expirado', 'NomeOperador']].to_html(index=False) 
 
 
 # Record the MIME types of both parts - text/plain and text/html.
