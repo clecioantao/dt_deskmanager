@@ -11,15 +11,10 @@ def carrega_dados_relatorio():
     import json
     import sqlalchemy
             
-    # CRIA ENGINE DE ORIGEM - CONECT SQL SERVER
+    # CRIA ENGINE DE ORIGEM - CONNECT SQL SERVER
     
     engineorigem = sqlalchemy.create_engine('mssql+pyodbc://sa:Proteu690201@192.168.2.150/deskmanager?driver=SQL Server')
-    
-    chamados = pd.read_sql(sql="SELECT * FROM chamados", con=engineorigem)
-    
-    chamados_total = len(chamados['CodChamado'].index) + 200
-    print('total de chamados: ', chamados_total)
-    
+        
     # AUTENTICAÇÃO API
     url = "https://api.desk.ms/Login/autenticar"
     pubkey = '\"ef89a6460dbd71f2e37a999514d2543b99509d4f\"'
@@ -32,7 +27,6 @@ def carrega_dados_relatorio():
     resp_token = json.loads(token.text)
     
     # VERIFICA QUANTIDADE DE REGISTROS
-    
     url = "https://api.desk.ms/Relatorios/imprimir"
     paginador = '\"' +  ' ' + '\"'
     relatorio = "837"
@@ -51,12 +45,11 @@ def carrega_dados_relatorio():
     print('Total de linhas: ', total_linhas)
     
     # CRIAR LAÇO 
-    
     print(resp_token)
     
     #chamados_total =  100000
     chamados_pag = 0
-    paginas = round((chamados_total / 5000) + 0.5)
+    paginas = 100000 #round((chamados_total / 5000) + 0.5)
     contador = 1
       
     while contador <= paginas:
@@ -64,6 +57,7 @@ def carrega_dados_relatorio():
         print('Paginas: ', paginas)
         print('Contador: ', contador)
         print('Linhas: ',chamados_pag)
+        print('Colunas: ',len(df.columns))
         #################################
         # LISTA DE CHAMADOS - paginação de 3000 em 3000 
         url = "https://api.desk.ms/Relatorios/imprimir"
@@ -81,8 +75,7 @@ def carrega_dados_relatorio():
        
         # EXPORTANDO DADASET PARA TABELA BANCO SQL SERVER
         # CALCULA O CHUNKSIZE MÁXIMO E VERIFICA FINAL LINHAS
-        print('Colunas:', len(df.columns))
-        if len(df.columns) > 0:
+        if len(df.columns) == 33:
             cs = 2097 // len(df.columns)  # duas barras faz a divisão e tras numero inteiro
             if cs > 1000:
                 cs = 1000

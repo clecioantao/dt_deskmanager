@@ -43,7 +43,6 @@ print(len(chamados['CodChamado'].index))
 print(chamados.iloc[:, [1,2]][chamados.NomeStatus =='AGUARDANDO ATENDIMENTO'])
 print(chamados_aa_analista[['NomeOperador', 'CodChamado']])
 
-
 #### DISPARA E-MAIL
 
 sumario_html = """
@@ -122,7 +121,6 @@ dados2 = chamados_aguardando_emdia[['CodChamado', 'Assunto', 'DataCriacao', 'Nom
 
 subtit3 = '<p class="center anuncio"><b>AGUARDANDO AÇÃO - EXPIRADOS</h3></b></p>'
 dados3 = chamados_aguardando_expirados[['CodChamado', 'Assunto', 'DataCriacao', 'NomeStatus', 'Sla1Expirado', 'Sla2Expirado', 'NomeOperador']].to_html(index=False) 
-
 
 # Record the MIME types of both parts - text/plain and text/html.
 sumario = MIMEText(sumario_html, 'html')
